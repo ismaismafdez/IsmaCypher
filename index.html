@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISMA Cipher</title>
+
+<link rel="manifest" href="manifest.json">
+
+<script>
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+<style>
+body{
+font-family: Arial, sans-serif;
+background:#111;
+color:white;
+padding:20px;
+text-align:center;
+}
+
+textarea,input{
+width:90%;
+margin:10px;
+padding:10px;
+border-radius:8px;
+border:none;
+font-size:16px;
+}
+
+button{
+padding:12px 20px;
+margin:8px;
+font-size:16px;
+border:none;
+border-radius:8px;
+background:#00bcd4;
+color:white;
+cursor:pointer;
+}
+
+#output{
+margin-top:20px;
+white-space:pre-wrap;
+background:#222;
+padding:15px;
+border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🔐 ISMA Cipher</h2>
+
+<textarea id="text" rows="5" placeholder="Introduce texto"></textarea>
+<input id="key" placeholder="Clave secreta">
+
+<br>
+<button onclick="encrypt()">Cifrar</button>
+<button onclick="decrypt()">Descifrar</button>
+
+<div id="output"></div>
+
+<script>
+const baseAlphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+
+function buildCipherAlphabet(key){
+key = key.toUpperCase().replace(/[^A-ZÑ]/g,"");
+let unique = [...new Set(key)];
+let result = unique.join("");
+
+for(let l of baseAlphabet){
+if(!result.includes(l)) result+=l;
+}
+return result;
+}
+
+function shiftLetter(alpha,pos,shift){
+let newPos = (pos + shift + alpha.length) % alpha.length;
+return alpha[newPos];
+}
+
+function encrypt(){
+let text = document.getElementById("text").value.toUpperCase();
+let key = document.getElementById("key").value;
+
+let cipherAlpha = buildCipherAlphabet(key);
+let result = "";
+let index = 1;
+
+for(let char of text){
+
+let basePos = baseAlphabet.indexOf(char);
+
+if(basePos === -1){
+result += char;
+continue;
+}
+
+let subLetter = cipherAlpha[basePos];
+let subPos = cipherAlpha.indexOf(subLetter);
+
+let shift = (index % 2 === 1) ? 1 : 2;
+
+let finalLetter = shiftLetter(cipherAlpha, subPos, shift);
+
+result += finalLetter;
+
+if(index % 3 === 0){
+result += "#";
+}
+
+index++;
+}
+
+document.getElementById("output").innerText = result;
+}
+
+function decrypt(){
+let text = document.getElementById("text").value.toUpperCase().replace(/#/g,"");
+let key = document.getElementById("key").value;
+
+let cipherAlpha = buildCipherAlphabet(key);
+let result = "";
+let index = 1;
+
+for(let char of text){
+
+let pos = cipherAlpha.indexOf(char);
+
+if(pos === -1){
+result += char;
+continue;
+}
+
+let shift = (index % 2 === 1) ? -1 : -2;
+
+let newPos = (pos + shift + cipherAlpha.length) % cipherAlpha.length;
+
+let interLetter = cipherAlpha[newPos];
+let basePos = cipherAlpha.indexOf(interLetter);
+
+result += baseAlphabet[basePos];
+
+index++;
+}
+
+document.getElementById("output").innerText = result;
+}
+</script>
+
+</body>
+</html>
